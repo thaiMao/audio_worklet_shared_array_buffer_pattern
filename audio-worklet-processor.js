@@ -11,9 +11,22 @@ const STATE = {
 };
 
 class SharedBufferWorkletProcessor extends AudioWorkletProcessor {
-  constructor() {}
+  constructor() {
+    super();
 
-  process() {}
+    this._initialised = false;
+    this.port.message = this._initialisedEvent.bind(this);
+  }
+
+  _initialisedEvent(eventFromWorker) {}
+
+  _pushInputChannelData(inputChannelData) {}
+
+  _pullOutputChannelData(outputChannelData) {}
+
+  process() {
+    return true;
+  }
 }
 
 registerProcessor("audio-worklet-processor", SharedBufferWorkletProcessor);
