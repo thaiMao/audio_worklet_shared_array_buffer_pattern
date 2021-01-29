@@ -38,7 +38,27 @@ class SharedBufferWorkletProcessor extends AudioWorkletProcessor {
     });
   }
 
-  _pushInputChannelData(inputChannelData) {}
+  _pushInputChannelData(inputChannelData) {
+    let inputWriteIndex = this._states[STATE.IB_WRITE_INDEX];
+
+    if (inputWriteIndex + inputChannelData.length < this._ringBufferLength) {
+      // If the ring buffer has enough space to push the input.
+      this._inputRingBuffer[0].set(inputChannelData, inputWriteIndex);
+    } else {
+      // When the ring buffer does not have enough space, the index needs to be wrapped around
+      let splitIndex = this._ringBufferLength - inputWriteIndex;
+      const firstHalf = inputChannelData.subArray(0, splitIndex);
+      const secondHalf = inputChannelData.subArray(splitIndex);
+
+      this._inputRingBuffer[0].set(firstHalf, inputWriteIndex);
+      this._inputRingBuffer[0].set(secondHalf);
+
+      this._states[STATE.IB_WRITE_INDEX] = secondHalf.length;
+    }
+
+    // Update the number of available frames in the input ring buffer.
+    this._states[STATE.IB_FRAMES_AVAILABLE] += inputChannelData.length;
+  }
 
   _pullOutputChannelData(outputChannelData) {}
 
