@@ -18,7 +18,7 @@ class SharedBufferWorkletNode extends AudioWorkletNode {
 
     // Initialize the worker.
     this._worker.postMessage({
-      message: "INITIALISE_WORKER",
+      message: "INITIALIZE_WORKER",
       options: {
         ringBufferLength: this._workerOptions.ringBufferLength,
         channelCount: this._workerOptions.channelCount,

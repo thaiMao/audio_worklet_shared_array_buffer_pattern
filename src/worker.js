@@ -112,17 +112,15 @@ function waitOnRenderRequest() {
 }
 
 /**
- * Initialise Worker
+ * Initialize Worker
  */
-function initialise(options) {
-  const {
-    stateBufferLength,
-    bytesPerState,
-    ringBufferLength,
-    channelCount,
-    bytesPerSample,
-    kernelLength,
-  } = { ...WORKER_CONFIG, ...options };
+function initialize(options) {
+  if (options.ringBufferLength) {
+    WORKER_CONFIG.ringBufferLength = options.ringBufferLength;
+  }
+  if (options.channelCount) {
+    WORKER_CONFIG.channelCount = options.channelCount;
+  }
 
   if (!self.SharedArrayBuffer) {
     postMessage({
@@ -136,12 +134,18 @@ function initialise(options) {
 
   // Allocate SABs
   const sharedBuffers = {
-    states: new SharedArrayBuffer(stateBufferLength * bytesPerState),
+    states: new SharedArrayBuffer(
+      WORKER_CONFIG.stateBufferLength * WORKER_CONFIG.bytesPerState
+    ),
     inputRingBuffer: new SharedArrayBuffer(
-      ringBufferLength * channelCount * bytesPerSample
+      WORKER_CONFIG.ringBufferLength *
+        WORKER_CONFIG.channelCount *
+        WORKER_CONFIG.bytesPerSample
     ),
     outputRingBuffer: new SharedArrayBuffer(
-      ringBufferLength * channelCount * bytesPerSample
+      WORKER_CONFIG.ringBufferLength *
+        WORKER_CONFIG.channelCount *
+        WORKER_CONFIG.bytesPerSample
     ),
   };
 
@@ -150,8 +154,16 @@ function initialise(options) {
   outputRingBuffer = [new Float32Array(sharedBuffers.outputRingBuffer)];
 
   // Initalise states buffer
-  Atomics.store(states, STATE_INDICES.RING_BUFFER_LENGTH, ringBufferLength);
-  Atomics.store(states, STATE_INDICES.KERNEL_LENGTH, kernelLength);
+  Atomics.store(
+    states,
+    STATE_INDICES.RING_BUFFER_LENGTH,
+    WORKER_CONFIG.ringBufferLength
+  );
+  Atomics.store(
+    states,
+    STATE_INDICES.KERNEL_LENGTH,
+    WORKER_CONFIG.kernelLength
+  );
 
   // Notify AudioWorkletNode running in the main thread that Worker is ready
   postMessage({
@@ -164,10 +176,10 @@ function initialise(options) {
 }
 
 onmessage = (eventFromMain) => {
-  if (eventFromMain.data.message != "INITIALISE_WORKER") {
+  if (eventFromMain.data.message != "INITIALIZE_WORKER") {
     console.log("[SharedBufferWorker] Unknown message: ", eventFromMain);
     return;
   }
 
-  initialise(eventFromMain.data.options);
+  initialize(eventFromMain.data.options);
 };
