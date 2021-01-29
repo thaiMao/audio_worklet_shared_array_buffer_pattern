@@ -81,10 +81,10 @@ function processKernel() {
       outputRingBuffer[j][outputWriteIndex] =
         inputRingBuffer[j][inputReadIndex];
 
-      if (outputWriteIndex++ === CONFIG.ringBufferLength) {
+      if (outputWriteIndex++ === WORKER_CONFIG.ringBufferLength) {
         outputWriteIndex = 0;
       }
-      if (inputReadIndex++ === CONFIG.ringBufferLength) {
+      if (inputReadIndex++ === WORKER_CONFIG.ringBufferLength) {
         inputReadIndex = 0;
       }
     }

@@ -15,7 +15,7 @@ class SharedBufferWorkletProcessor extends AudioWorkletProcessor {
     super();
 
     this._initialized = false;
-    this.port.message = this._initialisedEvent.bind(this);
+    this.port.onmessage = this._initialisedEvent.bind(this);
   }
 
   _initialisedEvent(eventFromWorker) {
@@ -33,6 +33,7 @@ class SharedBufferWorkletProcessor extends AudioWorkletProcessor {
     this._kernelLength = this._states[STATE.KERNEL_LENGTH];
 
     this._initialized = true;
+
     this.port.postMessage({
       message: "PROCESSOR_READY",
     });
@@ -44,13 +45,15 @@ class SharedBufferWorkletProcessor extends AudioWorkletProcessor {
     if (inputWriteIndex + inputChannelData.length < this._ringBufferLength) {
       // If the ring buffer has enough space to push the input.
       this._inputRingBuffer[0].set(inputChannelData, inputWriteIndex);
+      this._states[STATE.IB_WRITE_INDEX] += inputChannelData.length;
     } else {
       // When the ring buffer does not have enough space, the index needs to be wrapped around
       let splitIndex = this._ringBufferLength - inputWriteIndex;
-      const firstHalf = inputChannelData.subArray(0, splitIndex);
-      const secondHalf = inputChannelData.subArray(splitIndex);
+      const firstHalf = inputChannelData.subarray(0, splitIndex);
+      const secondHalf = inputChannelData.subarray(splitIndex);
 
       this._inputRingBuffer[0].set(firstHalf, inputWriteIndex);
+
       this._inputRingBuffer[0].set(secondHalf);
 
       this._states[STATE.IB_WRITE_INDEX] = secondHalf.length;
@@ -67,9 +70,9 @@ class SharedBufferWorkletProcessor extends AudioWorkletProcessor {
     const outputReadIndex = this._states[STATE.OB_READ_INDEX];
     const nextReadIndex = outputReadIndex + outputChannelData.length;
 
-    if (nextReadIndex < this._outputRingBuffer.length) {
+    if (nextReadIndex < this._ringBufferLength) {
       outputChannelData.set(
-        this._outputRingBuffer[0].subArray(outputReadIndex, nextReadIndex)
+        this._outputRingBuffer[0].subarray(outputReadIndex, nextReadIndex)
       );
       this._states[STATE.OB_READ_INDEX] += outputChannelData.length;
     } else {
