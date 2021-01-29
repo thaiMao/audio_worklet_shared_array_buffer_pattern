@@ -4,5 +4,10 @@
   "main": "index.js",
   "repository": "https://github.com/thaiMao/audio_worklet_shared_array_buffer_pattern.git",
   "author": "thai <maot.tm@gmail.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "webpack": "^5.18.0",
+    "webpack-cli": "^4.4.0",
+    "webpack-dev-server": "^3.11.2"
+  }
 }
