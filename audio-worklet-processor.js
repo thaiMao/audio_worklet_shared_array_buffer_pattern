@@ -60,7 +60,27 @@ class SharedBufferWorkletProcessor extends AudioWorkletProcessor {
     this._states[STATE.IB_FRAMES_AVAILABLE] += inputChannelData.length;
   }
 
-  _pullOutputChannelData(outputChannelData) {}
+  /**
+   * Pull the data out of the shared output buffer to fill outputChannelData
+   */
+  _pullOutputChannelData(outputChannelData) {
+    const outputReadIndex = this._states[STATE.OB_READ_INDEX];
+    const nextReadIndex = outputReadIndex + outputChannelData.length;
+
+    if (nextReadIndex < this._outputRingBuffer.length) {
+      outputChannelData.set(
+        this._outputRingBuffer[0].subArray(outputReadIndex, nextReadIndex)
+      );
+      this._states[STATE.OB_READ_INDEX] += outputChannelData.length;
+    } else {
+      let overflow = nextReadIndex - this._ringBufferLength;
+      let firstHalf = this._outputRingBuffer[0].subarray(outputReadIndex);
+      let secondHalf = this._outputRingBuffer[0].subarray(0, overflow);
+      outputChannelData.set(firstHalf);
+      outputChannelData.set(secondHalf, firstHalf.length);
+      this._states[STATE.OB_READ_INDEX] = secondHalf.length;
+    }
+  }
 
   process() {
     return true;
