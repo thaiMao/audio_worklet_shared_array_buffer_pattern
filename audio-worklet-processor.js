@@ -14,11 +14,29 @@ class SharedBufferWorkletProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
 
-    this._initialised = false;
+    this._initialized = false;
     this.port.message = this._initialisedEvent.bind(this);
   }
 
-  _initialisedEvent(eventFromWorker) {}
+  _initialisedEvent(eventFromWorker) {
+    const sharedBuffers = eventFromWorker.data;
+
+    // Get the states buffer
+    this._states = new Int32Array(sharedBuffers.states);
+
+    // Worker's input/output buffers. This example only handles mono channel
+    // for both.
+    this._inputRingBuffer = [new Float32Array(sharedBuffers.inputRingBuffer)];
+    this._outputRingBuffer = [new Float32Array(sharedBuffers.outputRingBuffer)];
+
+    this._ringBufferLength = this._states[STATE.RING_BUFFER_LENGTH];
+    this._kernelLength = this._states[STATE.KERNEL_LENGTH];
+
+    this._initialized = true;
+    this.port.postMessage({
+      message: "PROCESSOR_READY",
+    });
+  }
 
   _pushInputChannelData(inputChannelData) {}
 
