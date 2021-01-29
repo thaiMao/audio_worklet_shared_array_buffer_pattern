@@ -82,7 +82,23 @@ class SharedBufferWorkletProcessor extends AudioWorkletProcessor {
     }
   }
 
-  process() {
+  process(inputs, outputs) {
+    if (!this._initialized) {
+      return true;
+    }
+
+    // This example only handles mono channel.
+    const inputChannelData = inputs[0][0];
+    const outputChannelData = outputs[0][0];
+
+    this._pushInputChannelData(inputChannelData);
+    this._pullOutputChannelData(outputChannelData);
+
+    if (this._states[STATE.IB_FRAMES_AVAILABLE] >= this._kernelLength) {
+      // Now we have enough frames to process. Wake up the worker.
+      Atomics.notify(this._states, STATE.REQUEST_RENDER, 1);
+    }
+
     return true;
   }
 }
