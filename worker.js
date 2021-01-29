@@ -21,7 +21,7 @@
  */
 
 // Indices for State SharedArrayBuffer
-const STATE = {
+const STATE_INDICES = {
   // Flag for Atomics.wait() and Atomics.wake()
   REQUEST_RENDER: 0,
 
@@ -71,8 +71,8 @@ let outputRingBuffer;
  * Process audio data in ring buffer
  */
 function processKernel() {
-  let inputReadIndex = states[STATE.IB_READ_INDEX];
-  let outputWriteIndex = states[STATE.OB_WRITE_INDEX];
+  let inputReadIndex = states[STATE_INDICES.IB_READ_INDEX];
+  let outputWriteIndex = states[STATE_INDICES.OB_WRITE_INDEX];
 
   // processing kernel that clones audio data sample by sample
 
@@ -90,8 +90,8 @@ function processKernel() {
     }
   }
 
-  states[STATE.IB_READ_INDEX] = inputReadIndex;
-  states[STATE.OB_WRITE_INDEX] = outputWriteIndex;
+  states[STATE_INDICES.IB_READ_INDEX] = inputReadIndex;
+  states[STATE_INDICES.OB_WRITE_INDEX] = outputWriteIndex;
 }
 
 /**
@@ -99,15 +99,15 @@ function processKernel() {
  */
 function waitOnRenderRequest() {
   // As long as |REQUEST_RENDER| is zero, keep waiting. (sleep)
-  while (Atomics.wait(states, STATE.REQUEST_RENDER, 0) === "ok") {
+  while (Atomics.wait(states, STATE_INDICES.REQUEST_RENDER, 0) === "ok") {
     processKernel();
 
     // Update the number of available frames in the buffer.
-    states[STATE.IB_FRAMES_AVAILABLE] -= WORKER_CONFIG.kernelLength;
-    states[STATE.OB_FRAMES_AVAILABLE] += WORKER_CONFIG.kernelLength;
+    states[STATE_INDICES.IB_FRAMES_AVAILABLE] -= WORKER_CONFIG.kernelLength;
+    states[STATE_INDICES.OB_FRAMES_AVAILABLE] += WORKER_CONFIG.kernelLength;
 
     // Reset the request render bit, and wait again.
-    Atomics.store(states, STATE.REQUEST_RENDER, 0);
+    Atomics.store(states, STATE_INDICES.REQUEST_RENDER, 0);
   }
 }
 
@@ -150,8 +150,8 @@ function initialise(options) {
   outputRingBuffer = [new Float32Array(sharedBuffers.outputRingBuffer)];
 
   // Initalise states buffer
-  Atomics.store(states, STATE.RING_BUFFER_LENGTH, ringBufferLength);
-  Atomics.store(states, STATE.KERNEL_LENGTH, kernelLength);
+  Atomics.store(states, STATE_INDICES.RING_BUFFER_LENGTH, ringBufferLength);
+  Atomics.store(states, STATE_INDICES.KERNEL_LENGTH, kernelLength);
 
   // Notify AudioWorkletNode running in the main thread that Worker is ready
   postMessage({
