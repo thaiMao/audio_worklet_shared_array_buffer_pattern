@@ -18,7 +18,7 @@ class SharedBufferWorkletNode extends AudioWorkletNode {
 
     // Initialize the worker.
     this._worker.postMessage({
-      message: "INITIALIZE_WORKER",
+      message: "INITIALISE_WORKER",
       options: {
         ringBufferLength: this._workerOptions.ringBufferLength,
         channelCount: this._workerOptions.channelCount,
@@ -26,7 +26,25 @@ class SharedBufferWorkletNode extends AudioWorkletNode {
     });
   }
 
-  _onWorkerInitialized(eventFromWorker) {}
+  _onWorkerInitialized(eventFromWorker) {
+    const { data } = eventFromWorker;
+
+    if (data.message === "WORKER_READY") {
+      // Send SharedArrayBuffers to the AudioWorkletProcessor
+      this.port.postMessage(data.sharedBuffers);
+      return;
+    }
+
+    if (data.message === "WORKER_ERROR") {
+      console.log("[SharedBufferWorklet] Worker Error:", data.detail);
+      if (typeof this.onError === "function") {
+        this.onError(data);
+      }
+      return;
+    }
+
+    console.log("[SharedBufferWorklet] Unknown message: ", eventFromWorker);
+  }
 
   _onProcessorInitialized(eventFromProcessor) {}
 }
