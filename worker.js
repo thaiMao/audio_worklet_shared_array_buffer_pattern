@@ -162,3 +162,12 @@ function initialise(options) {
   // Start waiting
   waitOnRenderRequest();
 }
+
+onmessage = (eventFromMain) => {
+  if (eventFromMain.data.message != "INITIALISE_WORKER") {
+    console.log("[SharedBufferWorker] Unknown message: ", eventFromMain);
+    return;
+  }
+
+  initialise(eventFromMain.data.options);
+};
