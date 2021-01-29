@@ -5,10 +5,10 @@ class SharedBufferWorkletNode extends AudioWorkletNode {
     this._workerOptions =
       options && options.worker
         ? options.worker
-        : { ringRufferLength: 3072, channelCount: 1 };
+        : { ringBufferLength: 3072, channelCount: 1 };
 
     // Instantate Worker
-    this._worker = new Worker("worker.js");
+    this._worker = new Worker("src/worker.js");
 
     // Async messaging exchanges only called on initialisation.
     // After the initial setup, communication between Worker and
@@ -31,6 +31,7 @@ class SharedBufferWorkletNode extends AudioWorkletNode {
 
     if (data.message === "WORKER_READY") {
       // Send SharedArrayBuffers to the AudioWorkletProcessor
+      console.log("Worker ready");
       this.port.postMessage(data.sharedBuffers);
       return;
     }
@@ -46,5 +47,20 @@ class SharedBufferWorkletNode extends AudioWorkletNode {
     console.log("[SharedBufferWorklet] Unknown message: ", eventFromWorker);
   }
 
-  _onProcessorInitialized(eventFromProcessor) {}
+  _onProcessorInitialized(eventFromProcessor) {
+    const data = eventFromProcessor.data;
+    if (
+      data.message === "PROCESSOR_READY" &&
+      typeof this.onInitialized === "function"
+    ) {
+      this.onInitialized();
+      return;
+    }
+
+    console.log("[SharedBufferWorklet] Unknown message: ", eventFromProcessor);
+  }
 }
+
+module.exports = {
+  SharedBufferWorkletNode,
+};
