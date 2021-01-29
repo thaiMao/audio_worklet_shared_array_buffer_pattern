@@ -1,0 +1,8 @@
+{
+  "name": "audio_worklet_shared_array_buffer",
+  "version": "0.1.0",
+  "main": "index.js",
+  "repository": "https://github.com/thaiMao/audio_worklet_shared_array_buffer_pattern.git",
+  "author": "thai <maot.tm@gmail.com>",
+  "license": "MIT"
+}
