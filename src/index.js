@@ -1,17 +1,21 @@
 const { SharedBufferWorkletNode } = require("./audio-worklet-node");
 
-function handleClick() {
+let synth;
+
+function handleMousedown() {
   const context = new AudioContext();
 
+  Tone.context = context;
+
   context.audioWorklet.addModule("src/audio-worklet-processor.js").then(() => {
-    const oscillator = new OscillatorNode(context);
+    synth = new Tone.Oscillator(400, "sine");
 
     const sbwNode = new SharedBufferWorkletNode(context);
 
     sbwNode.onInitialized = () => {
-      oscillator.connect(sbwNode).connect(context.destination);
-
-      oscillator.start();
+      Tone.connect(synth, sbwNode);
+      Tone.connect(sbwNode, context.destination);
+      synth.start();
     };
 
     sbwNode.onError = (errorData) => {
@@ -22,4 +26,8 @@ function handleClick() {
 
 const btnElement = document.getElementById("btn");
 
-btnElement.onclick = handleClick;
+btnElement.onmousedown = handleMousedown;
+
+btnElement.onmouseup = () => {
+  synth.stop();
+};
