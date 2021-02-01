@@ -8,7 +8,7 @@ function handleMousedown() {
   Tone.context = context;
 
   context.audioWorklet.addModule("src/audio-worklet-processor.js").then(() => {
-    synth = new Tone.Oscillator(400, "square");
+    synth = new Tone.Oscillator(400, "sine");
 
     const sbwNode = new SharedBufferWorkletNode(context);
 

@@ -78,8 +78,22 @@ function processKernel() {
 
   for (let i = 0; i < WORKER_CONFIG.kernelLength; ++i) {
     for (let j = 0; j < inputRingBuffer.length; ++j) {
-      outputRingBuffer[j][outputWriteIndex] =
-        inputRingBuffer[j][inputReadIndex];
+      const input = inputRingBuffer[j][inputReadIndex];
+
+      // Overdrive
+      const x = Math.abs(input);
+      let y;
+
+      if (0.0 < x && x < 0.333) {
+        y = 2 * x;
+      } else if (0.333 < x && x < 0.666) {
+        let t = 2.0 - 3.0 * x;
+        y = (3.0 - t * t) / 3.0;
+      } else {
+        y = x;
+      }
+
+      outputRingBuffer[j][outputWriteIndex] = y; // input; //
 
       if (outputWriteIndex++ === WORKER_CONFIG.ringBufferLength) {
         outputWriteIndex = 0;
