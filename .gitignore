@@ -1,1 +1,3 @@
-/node_modules
+/target
+Cargo.lock
+/site/node_modules
