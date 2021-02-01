@@ -94,7 +94,7 @@ class SharedBufferWorkletProcessor extends AudioWorkletProcessor {
     const inputChannelData = inputs[0][0];
     const outputChannelData = outputs[0][0];
 
-    if (typeof inputChannelData === "undefined") return;
+    if (typeof inputChannelData === "undefined") return true;
 
     this._pushInputChannelData(inputChannelData);
     this._pullOutputChannelData(outputChannelData);
