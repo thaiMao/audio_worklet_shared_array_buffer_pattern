@@ -1,5 +1,9 @@
 const { SharedBufferWorkletNode } = require("./audio-worklet-node");
 
+import("../node_modules/hello-rust-dsp-fx/hello_rust_dsp_fx.js").then((js) => {
+  js.greet("WebAssembly");
+});
+
 let synth;
 
 function handleMousedown() {

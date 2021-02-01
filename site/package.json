@@ -5,12 +5,15 @@
   "repository": "https://github.com/thaiMao/audio_worklet_shared_array_buffer_pattern.git",
   "author": "thai <maot.tm@gmail.com>",
   "license": "MIT",
+  "dependencies": {
+    "hello-rust-dsp-fx": "^0.1.0"
+  },
   "devDependencies": {
     "webpack": "^4.25.1",
     "webpack-cli": "^3.1.2",
     "webpack-dev-server": "^3.1.10"
   },
   "scripts": {
-    "serve": "webpack-dev-server"
+    "dev": "webpack-dev-server"
   }
 }
