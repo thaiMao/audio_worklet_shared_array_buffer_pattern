@@ -20,8 +20,10 @@
  *
  */
 
+const BASE_URL = "*";
+
 // Indices for State SharedArrayBuffer
-const STATE_INDICES = {
+const STATE = {
   // Flag for Atomics.wait() and Atomics.wake()
   REQUEST_RENDER: 0,
 
@@ -54,25 +56,25 @@ const WORKER_CONFIG = {
   bytesPerState: Int32Array.BYTES_PER_ELEMENT,
   bytesPerSample: Float32Array.BYTES_PER_ELEMENT,
   stateBufferLength: 16,
-  ringRufferLength: 4096,
+  ringBufferLength: 4096,
   kernelLength: 1024,
   channelCount: 1,
   waitTimeOut: 25000,
 };
 
 // Shared state between Worker and AudioWorkletProcessor
-let states;
+let states: any;
 
 // Shared ring buffers between Worker and AWP
-let inputRingBuffer;
-let outputRingBuffer;
+let inputRingBuffer: any;
+let outputRingBuffer: any;
 
 /**
  * Process audio data in ring buffer
  */
 function processKernel() {
-  let inputReadIndex = states[STATE_INDICES.IB_READ_INDEX];
-  let outputWriteIndex = states[STATE_INDICES.OB_WRITE_INDEX];
+  let inputReadIndex = states[STATE.IB_READ_INDEX];
+  let outputWriteIndex = states[STATE.OB_WRITE_INDEX];
 
   // processing kernel that clones audio data sample by sample
 
@@ -104,8 +106,8 @@ function processKernel() {
     }
   }
 
-  states[STATE_INDICES.IB_READ_INDEX] = inputReadIndex;
-  states[STATE_INDICES.OB_WRITE_INDEX] = outputWriteIndex;
+  states[STATE.IB_READ_INDEX] = inputReadIndex;
+  states[STATE.OB_WRITE_INDEX] = outputWriteIndex;
 }
 
 /**
@@ -113,22 +115,22 @@ function processKernel() {
  */
 function waitOnRenderRequest() {
   // As long as |REQUEST_RENDER| is zero, keep waiting. (sleep)
-  while (Atomics.wait(states, STATE_INDICES.REQUEST_RENDER, 0) === "ok") {
+  while (Atomics.wait(states, STATE.REQUEST_RENDER, 0) === "ok") {
     processKernel();
 
     // Update the number of available frames in the buffer.
-    states[STATE_INDICES.IB_FRAMES_AVAILABLE] -= WORKER_CONFIG.kernelLength;
-    states[STATE_INDICES.OB_FRAMES_AVAILABLE] += WORKER_CONFIG.kernelLength;
+    states[STATE.IB_FRAMES_AVAILABLE] -= WORKER_CONFIG.kernelLength;
+    states[STATE.OB_FRAMES_AVAILABLE] += WORKER_CONFIG.kernelLength;
 
     // Reset the request render bit, and wait again.
-    Atomics.store(states, STATE_INDICES.REQUEST_RENDER, 0);
+    Atomics.store(states, STATE.REQUEST_RENDER, 0);
   }
 }
 
 /**
  * Initialize Worker
  */
-function initialize(options) {
+function initialize(options: any) {
   if (options.ringBufferLength) {
     WORKER_CONFIG.ringBufferLength = options.ringBufferLength;
   }
@@ -137,12 +139,15 @@ function initialize(options) {
   }
 
   if (!self.SharedArrayBuffer) {
-    postMessage({
-      message: "WORKER_ERROR",
-      detail: `SharedArrayBuffer is not supported in your browser. See
+    postMessage(
+      {
+        message: "WORKER_ERROR",
+        detail: `SharedArrayBuffer is not supported in your browser. See
             https://developers.google.com/web/updates/2018/06/audio-worklet-design-pattern
             for more info.`,
-    });
+      },
+      BASE_URL
+    );
     return;
   }
 
@@ -170,20 +175,19 @@ function initialize(options) {
   // Initalise states buffer
   Atomics.store(
     states,
-    STATE_INDICES.RING_BUFFER_LENGTH,
+    STATE.RING_BUFFER_LENGTH,
     WORKER_CONFIG.ringBufferLength
   );
-  Atomics.store(
-    states,
-    STATE_INDICES.KERNEL_LENGTH,
-    WORKER_CONFIG.kernelLength
-  );
+  Atomics.store(states, STATE.KERNEL_LENGTH, WORKER_CONFIG.kernelLength);
 
   // Notify AudioWorkletNode running in the main thread that Worker is ready
-  postMessage({
-    message: "WORKER_READY",
-    sharedBuffers,
-  });
+  postMessage(
+    {
+      message: "WORKER_READY",
+      sharedBuffers,
+    },
+    BASE_URL
+  );
 
   // Start waiting
   waitOnRenderRequest();
